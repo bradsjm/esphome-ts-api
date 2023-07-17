@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/enums/integration-type.ts"],
+  "sourcesContent": ["export enum IntegrationType {\n    Dcm = \"DCM\",\n    TPLink = \"TPLink\",\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAO,IAAK,kBAAL,kBAAKA,qBAAL;AACH,EAAAA,iBAAA,SAAM;AACN,EAAAA,iBAAA,YAAS;AAFD,SAAAA;AAAA,GAAA;",
+  "names": ["IntegrationType"]
+}

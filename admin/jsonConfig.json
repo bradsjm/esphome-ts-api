@@ -1,0 +1,57 @@
+{
+    "i18n": true,
+    "type": "panel",
+    "items": {
+        "email": {
+            "type": "text",
+            "label": "Sense E-mail Address",
+            "help": "The e-mail address you use to log in to the Sense App",
+            "newLine": true,
+            "sm": 4
+        },
+        "password": {
+            "type": "password",
+            "label": "Sense Password",
+            "help": "The password you use to log in to the Sense App",
+            "newLine": true,
+            "sm": 4
+        },
+        "generalUpdateSeconds": {
+            "type": "number",
+            "label": "Update Interval",
+            "help": "The number of seconds between updates",
+            "min": 0,
+            "max": 60,
+            "default": 5,
+            "newLine": true,
+            "sm": 4
+        },
+        "deviceUpdateSeconds": {
+            "type": "number",
+            "label": "Device Update Interval",
+            "help": "The number of seconds between device updates",
+            "min": 0,
+            "max": 60,
+            "default": 1,
+            "newLine": true,
+            "sm": 4
+        },
+        "onWattThreshold": {
+            "type": "number",
+            "label": "Power Threshold",
+            "help": "Minimum watts to consider a device is 'on'",
+            "min": 0,
+            "max": 100,
+            "default": 2,
+            "newLine": true,
+            "sm": 4
+        },
+        "deviceFilter": {
+            "type": "chips",
+            "label": "Device Filter",
+            "help": "Device names to ignore",
+            "newLine": true,
+            "sm": 6
+        }
+    }
+}

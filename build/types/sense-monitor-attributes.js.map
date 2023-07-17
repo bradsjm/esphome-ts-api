@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/types/sense-monitor-attributes.ts"],
+  "sourcesContent": ["export type SenseMonitorAttributes = {\n    id: number\n    name: string\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
+  "names": []
+}

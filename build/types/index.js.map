@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/types/index.ts"],
+  "sourcesContent": ["export { SenseMonitorAttributes } from \"./sense-monitor-attributes\"\nexport { SenseSettings } from \"./sense-settings\"\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,sCAAuC;AACvC,4BAA8B;",
+  "names": []
+}

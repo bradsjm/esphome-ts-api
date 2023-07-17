@@ -1,0 +1,212 @@
+{
+    "common": {
+        "name": "sense-energy-monitor",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "uk": "Початкова версія",
+                "zh-cn": "首次出版"
+            }
+        },
+        "title": "Sense Energy Monitor",
+        "titleLang": {
+            "en": "Sense Energy Monitor",
+            "de": "Sense Energy Monitor",
+            "ru": "Сенсорный монитор энергии",
+            "pt": "Monitor de Energia Sensorial",
+            "nl": "Sense Energiemonitor",
+            "fr": "Moniteur d'énergie de détection",
+            "it": "Monitoraggio dell'energia dei sensi",
+            "es": "Monitor de energía sensorial",
+            "pl": "Zmysłowy monitor energii",
+            "uk": "Монітор енергії Sense",
+            "zh-cn": "感应能量监测器"
+        },
+        "desc": {
+            "en": "Provides real-time Sense meter energy usage",
+            "de": "Bietet Echtzeit-Sense-Meter-Energieverbrauch",
+            "ru": "Обеспечивает использование энергии Sense Meter в реальном времени",
+            "pt": "Fornece uso de energia do medidor Sense em tempo real",
+            "nl": "Biedt realtime energieverbruik van de Sense-meter",
+            "fr": "Fournit la consommation d'énergie du compteur Sense en temps réel",
+            "it": "Fornisce il consumo di energia del misuratore di rilevamento in tempo reale",
+            "es": "Proporciona el uso de energía del medidor Sense en tiempo real",
+            "pl": "Zapewnia pomiar zużycia energii Sense w czasie rzeczywistym",
+            "uk": "Забезпечує вимірювання споживання енергії Sense у реальному часі",
+            "zh-cn": "提供实时 Sense 仪表能源使用情况"
+        },
+        "authors": [
+            "Jonathan Bradshaw <jb@nrgup.net>"
+        ],
+        "keywords": [
+            "sense"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "build/main.js",
+        "icon": "sense-energy-monitor.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/bradsjm/ioBroker.sense-energy-monitor/main/admin/sense-energy-monitor.png",
+        "readme": "https://github.com/bradsjm/ioBroker.sense-energy-monitor/blob/main/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "energy",
+        "compact": true,
+        "connectionType": "cloud",
+        "dataSource": "push",
+        "adminUI": {
+            "config": "json"
+        },
+        "dependencies": [
+            {
+                "js-controller": ">=3.3.22"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=5.1.13"
+            }
+        ]
+    },
+    "encryptedNative": [
+        "password"
+    ],
+    "protectedNative": [
+        "password"
+    ],
+    "native": {
+        "email": "",
+        "password": "",
+        "deviceUpdateSeconds": 5,
+        "generalUpdateSeconds": 10,
+        "onWattThreshold": 2,
+        "deviceFilter": []
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "grid",
+            "type": "channel",
+            "common": {
+                "name": "Sense Power Grid Metrics"
+            },
+            "native": {}
+        },
+        {
+            "_id": "grid.frequency",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Grid Frequency",
+                "type": "number",
+                "unit": "Hz",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "grid.wattage",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Grid Power Consumption",
+                "type": "number",
+                "unit": "W",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "grid.wattageL1",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Grid Power Consumption (Leg 1)",
+                "type": "number",
+                "unit": "W",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "grid.wattageL2",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Grid Power Consumption (Leg 2)",
+                "type": "number",
+                "unit": "W",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "grid.voltageL1",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Grid Voltage (Leg 1)",
+                "type": "number",
+                "unit": "V",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "grid.voltageL2",
+            "type": "state",
+            "common": {
+                "role": "value",
+                "name": "Grid Voltage (Leg 2)",
+                "type": "number",
+                "unit": "V",
+                "read": true,
+                "write": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "devices",
+            "type": "folder",
+            "common": {
+                "name": "Sense Device Metrics"
+            },
+            "native": {}
+        }
+    ]
+}

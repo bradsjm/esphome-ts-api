@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../src/enums/control-capability.ts"],
+  "sourcesContent": ["export enum ControlCapability {\n    OnOff = \"OnOff\",\n    StandbyThreshold = \"StandbyThreshold\",\n}\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAO,IAAK,oBAAL,kBAAKA,uBAAL;AACH,EAAAA,mBAAA,WAAQ;AACR,EAAAA,mBAAA,sBAAmB;AAFX,SAAAA;AAAA,GAAA;",
+  "names": ["ControlCapability"]
+}
