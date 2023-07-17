@@ -28,12 +28,12 @@ class SenseEnergyMonitor extends Adapter {
         // Create a new SenseClient instance and authenticate with the Sense API
         const client = new SenseClient({ email: this.config.email, password: this.config.password });
         client.on("authenticated", async () => {
-            this.log.info("authenticated with Sense API");
+            this.log.info("authenticated to Sense, opening real-time connection");
             await client.start(); // start real-time updates
         });
         client.on("connected", async () => {
-            this.log.info("receiving Sense API real-time updates");
-            await this.setStateAsync("info.connection", false, true);
+            this.log.info("receiving Sense real-time updates");
+            await this.setStateAsync("info.connection", true, true);
         });
         client.on("disconnected", async () => {
             this.log.info("disconnected from Sense API");
@@ -44,6 +44,7 @@ class SenseEnergyMonitor extends Adapter {
             await this.setStateAsync("info.connection", false, true);
         })
 
+        // Create a new SenseParser instance and configure events
         this.parser = new SenseParser({
             deviceFilter: this.config.deviceFilter,
             deviceUpdateSeconds: this.config.deviceUpdateSeconds,
