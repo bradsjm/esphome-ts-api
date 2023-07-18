@@ -36,6 +36,9 @@ class SenseParser extends import_events.EventEmitter {
       device: {}
     };
   }
+  static isLocallyAdministered(macAddress) {
+    return typeof macAddress === "string" && ["2", "6", "A", "E"].includes(macAddress[1].toUpperCase());
+  }
   parse(update) {
     if (update.voltage != null) {
       update.voltage = update.voltage.map((voltage) => Math.round(voltage));
@@ -68,7 +71,9 @@ class SenseParser extends import_events.EventEmitter {
     this.previousDeviceList = deviceList;
   }
   parseActiveDevices(devices) {
-    const filtered = devices.filter((device) => !this.options.deviceFilter.includes(device.name) && !this.options.deviceFilter.includes(device.id) && device.tags["DeviceListAllowed"] === "true");
+    const filtered = devices.filter(
+      (device) => !this.options.deviceFilter.includes(device.name) && !this.options.deviceFilter.includes(device.id) && device.tags["DeviceListAllowed"] === "true" && !SenseParser.isLocallyAdministered(String(device.tags["DUID"]))
+    );
     filtered.forEach((device) => {
       device.w = Math.round(device.w);
       const interval = GENERIC_DEVICES.includes(device.id) ? this.options.generalUpdateSeconds : this.options.deviceUpdateSeconds;

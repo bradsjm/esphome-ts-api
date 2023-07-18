@@ -18,8 +18,8 @@ var __copyProps = (to, from, except, desc) => {
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 var interfaces_exports = {};
 __export(interfaces_exports, {
-  Device: () => import_sense_update.Device,
   SenseAuthResponse: () => import_sense_auth_response.SenseAuthResponse,
+  SenseDevice: () => import_sense_devices.SenseDevice,
   SenseDevices: () => import_sense_devices.SenseDevices,
   SenseMonitor: () => import_sense_auth_response.SenseMonitor,
   SenseMonitorAttributes: () => import_sense_monitor_attributes.SenseMonitorAttributes,
@@ -34,8 +34,8 @@ var import_sense_settings = require("../types/sense-settings");
 var import_sense_monitor_attributes = require("../types/sense-monitor-attributes");
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  Device,
   SenseAuthResponse,
+  SenseDevice,
   SenseDevices,
   SenseMonitor,
   SenseMonitorAttributes,
