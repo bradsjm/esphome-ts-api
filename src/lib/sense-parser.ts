@@ -1,4 +1,4 @@
-import { Device, SenseUpdate } from "../interfaces";
+import { SenseDevice, SenseUpdate } from "../interfaces";
 import { EventEmitter } from "events";
 import { getIcon } from "./device-icons";
 
@@ -19,7 +19,7 @@ const GENERIC_DEVICES = [ "unknown", "always_on", "solar" ]
 export class SenseParser extends EventEmitter {
     private readonly lastUpdateTime: Record<EventNames, Record<string, number>>;
     private readonly options: SenseParserOptions;
-    private previousDeviceList: Device[] = [];
+    private previousDeviceList: SenseDevice[] = [];
 
     /**
      * Creates a new SenseParser instance.
@@ -34,6 +34,17 @@ export class SenseParser extends EventEmitter {
             gridWatts: {},
             device: {}
         };
+    }
+
+    /**
+     * This function checks if a given MAC address is locally administered.
+     *
+     * @param macAddress: string The MAC address to be checked.
+     *
+     * @return A boolean indicating whether the MAC address is locally administered.
+     */
+    private static isLocallyAdministered(macAddress: string | undefined): boolean {
+        return typeof (macAddress) === "string" && [ "2", "6", "A", "E" ].includes(macAddress[1].toUpperCase());
     }
 
     /**
@@ -82,7 +93,6 @@ export class SenseParser extends EventEmitter {
         }
     }
 
-
     /**
      * The handleMissingDevices function is used to find devices that are no longer present in the current deviceList list.
      * It does this by comparing the previousDeviceList with the current deviceList list and emitting a 0 watt event for any
@@ -91,9 +101,9 @@ export class SenseParser extends EventEmitter {
      * This way, when handleMissingDevices is called again on a future iteration of getDataAndPublish(), it will have
      * access to both lists of devices so that it can compare them.
      *
-     * @param deviceList: {Device[]} the array of devices from the sense api
+     * @param deviceList: {SenseDevice[]} the array of devices from the sense api
      */
-    private handleMissingDevices(deviceList: Device[]): void {
+    private handleMissingDevices(deviceList: SenseDevice[]): void {
         // Find devices no longer present to emit a 0 watt event
         this.previousDeviceList.forEach(lastDevice => {
             if (!deviceList.some(device => device.id === lastDevice.id)) {
@@ -108,13 +118,15 @@ export class SenseParser extends EventEmitter {
     /**
      * The parseActiveDevices function takes an array of devices and emits a device event for each one.
      *
-     * @param devices: {Device[]} array of devices from the sense api
+     * @param devices: {SenseDevice[]} array of devices from the sense api
      */
-    private parseActiveDevices(devices: Device[]): void {
+    private parseActiveDevices(devices: SenseDevice[]): void {
         const filtered = devices.filter((device) =>
             !this.options.deviceFilter.includes(device.name) &&
             !this.options.deviceFilter.includes(device.id) &&
-            device.tags["DeviceListAllowed"] === "true");
+            device.tags["DeviceListAllowed"] === "true" &&
+            !SenseParser.isLocallyAdministered(String(device.tags["DUID"]))
+        );
 
         // Emit device event for each device
         filtered.forEach((device) => {

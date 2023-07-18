@@ -1,7 +1,7 @@
 import { Adapter, AdapterOptions } from "@iobroker/adapter-core";
 import { EventEmitter } from "events";
 import { SenseClient, SenseParser } from "./lib";
-import { Device } from "./interfaces";
+import { SenseDevice } from "./interfaces";
 
 class SenseEnergyMonitor extends Adapter {
     private client?: SenseClient;
@@ -28,49 +28,57 @@ class SenseEnergyMonitor extends Adapter {
         // Create a new SenseClient instance and authenticate with the Sense API
         const client = new SenseClient({ email: this.config.email, password: this.config.password });
         client.on("authenticated", async () => {
-            this.log.info("authenticated to Sense, opening real-time connection");
-            await client.start(); // start real-time updates
+            this.log.info("authenticated to Sense");
         });
+
         client.on("connected", async () => {
-            this.log.info("receiving Sense real-time updates");
+            this.log.info("connected to Sense websocket");
+        });
+
+        client.on("hello", async () => {
+            this.log.info("receiving data from Sense");
             await this.setStateAsync("info.connection", true, true);
         });
-        client.on("disconnected", async () => {
-            this.log.info("disconnected from Sense API");
+
+        client.on("disconnected", async (reason) => {
+            this.log.info("disconnected from Sense API due to " + reason);
             await this.setStateAsync("info.connection", false, true);
         });
+
         client.on("error", async (error) => {
             this.log.error(error);
             await this.setStateAsync("info.connection", false, true);
         })
 
         // Create a new SenseParser instance and configure events
-        this.parser = new SenseParser({
+        const parser = new SenseParser({
             deviceFilter: this.config.deviceFilter,
             deviceUpdateSeconds: this.config.deviceUpdateSeconds,
             generalUpdateSeconds: this.config.generalUpdateSeconds,
         });
+        client.on("realtime_update", parser.parse.bind(parser));
+
         this.expireSeconds = Math.max(this.config.deviceUpdateSeconds, this.config.generalUpdateSeconds) * 2;
 
-        this.parser.on("gridVoltages", (voltages: number[]) => {
+        parser.on("gridVoltages", (voltages: number[]) => {
             this.setState("grid.voltageL1", { val: voltages[0], ack: true, expire: this.expireSeconds });
             this.setState("grid.voltageL2", { val: voltages[1], ack: true, expire: this.expireSeconds });
             this.log.debug(`voltage update: ${voltages.join("V, ")}V`);
         });
 
-        this.parser.on("gridFrequency", (hz: number) => {
+        parser.on("gridFrequency", (hz: number) => {
             this.setState("grid.frequency", { val: hz, ack: true, expire: this.expireSeconds });
             this.log.debug(`frequency update: ${hz}hz`);
         });
 
-        this.parser.on("gridWatts", (watts: number[]) => {
+        parser.on("gridWatts", (watts: number[]) => {
             this.setState("grid.wattage", { val: watts[0] + watts[1], ack: true, expire: this.expireSeconds });
             this.setState("grid.wattageL1", { val: watts[0], ack: true, expire: this.expireSeconds });
             this.setState("grid.wattageL2", { val: watts[1], ack: true, expire: this.expireSeconds });
             this.log.debug(`gridWatts update: ${watts.join("W, ")}W`);
         });
 
-        this.parser.on("device", async (device: Device) => {
+        parser.on("device", async (device: SenseDevice) => {
             this.log.debug(`device update: ${device.name} (${device.id}) ${device.w}W`);
 
             await this.setObjectNotExistsAsync(`devices.${device.id}`, {
@@ -120,10 +128,9 @@ class SenseEnergyMonitor extends Adapter {
             });
         });
 
-        client.on("realtime_update", this.parser.parse.bind(this.parser));
-
-        await client.authenticate();
         this.client = client;
+        this.parser = parser;
+        await client.start(); // start real-time updates
     }
 
     /**

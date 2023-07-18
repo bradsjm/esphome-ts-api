@@ -4,13 +4,14 @@ import axios from "axios";
 import { SenseAuthResponse, SenseDevices } from "../interfaces"
 import { stringify } from "querystring";
 import memoize from "memoizee";
+import { clearInterval } from "timers";
 
 const API_URL = "https://api.sense.com/apiservice/api/v1/"
 const WS_URL = "wss://clientrt.sense.com/monitors/%id%/realtimefeed?access_token=%token%"
 
 const RECONNECT_INTERVAL = 10000; // Initial reconnect interval (10 seconds)
 const MAX_RECONNECT_INTERVAL = 60000; // Maximum reconnect interval (60 seconds)
-const WATCHDOG_INTERVAL = 60000; // If no message received in this time (60 seconds)
+const PING_INTERVAL = 60000; // Send websocket ping every interval (60 seconds)
 
 const API_MAX_AGE = 300000 // 5 minutes
 const API_TIMEOUT = 5000 // 5 seconds
@@ -33,9 +34,9 @@ export class SenseClient extends EventEmitter {
     private readonly _getDevicesMemoized;
     private readonly httpsClient;
     private options;
+    private pingTimer?: NodeJS.Timer;
     private reconnectInterval = RECONNECT_INTERVAL;
     private reconnectTimer?: NodeJS.Timeout;
-    private watchdogTimer?: NodeJS.Timeout;
     private webSocket?: WebSocket;
 
     /**
@@ -83,35 +84,6 @@ export class SenseClient extends EventEmitter {
     }
 
     /**
-     * The authenticate function is used to authenticate the user with the Sense API.
-     * It uses the email and password provided in the options object to make a POST request
-     * to /authenticate endpoint, which returns an access token that will be used for subsequent requests.
-     *
-     * @returns true if the authentication was successful, false otherwise
-     */
-    public async authenticate(): Promise<boolean> {
-        this._account = undefined;
-        const response = await this.httpsClient.post<SenseAuthResponse>(
-            "authenticate", stringify({
-                email: this.options.email,
-                password: this.options.password,
-                remember_me: true
-            }), {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
-            }).catch((error) => this.httpErrorHandler(error));
-        if (response?.data?.authorized) {
-            this.httpsClient.defaults.headers.common["Authorization"] = "bearer " + response.data.access_token;
-            this._account = response.data;
-            this.emit("authenticated", response.data);
-            return true;
-        }
-        this._account = undefined;
-        return false;
-    }
-
-    /**
      * The getDevices function is used to retrieve the devices associated with a monitor.
      * This function is memoized to prevent unnecessary requests to the Sense API.
      *
@@ -133,54 +105,29 @@ export class SenseClient extends EventEmitter {
     }
 
     /**
-     * The renewToken function is used to renew the access token for a Sense account.
-     * This function should be called when the access token expires, which happens after 1 hour of inactivity.
-     * The function will automatically update the authorization header with the new access token and emit an event
-     * that can be listened to by other modules.
-     *
-     * @returns true if the token was renewed successfully, false otherwise
-     */
-    public async renewToken(): Promise<boolean> {
-        const response = await this.httpsClient.post<SenseAuthResponse>("renew", stringify({
-            "user_id": this._account?.user_id,
-            "refresh_token": this._account?.refresh_token
-        }), {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            }
-        }).catch((error) => this.httpErrorHandler(error));
-        if (response?.data?.authorized) {
-            this.httpsClient.defaults.headers.common["Authorization"] = "bearer " + response.data.access_token;
-            this._account = { ...this._account, ...response.data };
-            this.emit("token", response.data);
-            return true;
-        }
-        this._account = undefined;
-        return false;
-    }
-
-    /**
      * The start function is used to start the websocket connection that provides real-time energy data events.
      * It will throw an error if you have not authenticated first.
      */
     public async start(): Promise<void> {
-        if (!this._account) {
-            throw new Error("Must authenticate first before starting websocket");
+        // Schedule a reconnect attempt in case of failure
+        this.scheduleReconnect();
+
+        if (!await this.authenticate()) {
+            return;
         }
-        const id = String(this._account.monitors[0].id);
-        const token = this._account.access_token;
+
+        const id = String(this._account!.monitors[0].id);
+        const token = this._account!.access_token;
         const wsUrl = WS_URL.replace("%id%", id).replace("%token%", token);
         const ws = new WebSocket(wsUrl, [], {
             timeout: WSS_TIMEOUT,
         });
-        ws.onopen = () => this.onConnected();
-        ws.onmessage = (event) => this.onMessage(event);
-        ws.onclose = () => this.onDisconnected();
-        ws.onerror = (error) => this.emit("error", error);
+        ws.on("open", () => this.onConnected());
+        ws.on("message", (event) => this.onMessage(event));
+        ws.on("close", (code, reason) => this.onDisconnected(reason.toString()));
+        ws.on("error", (error) => this.emit("error", error));
+        ws.on("pong", () => this.emit("pong"));
         this.webSocket = ws;
-
-        // Schedule a reconnect attempt in case of failure
-        this.scheduleReconnect();
     }
 
     /**
@@ -188,7 +135,11 @@ export class SenseClient extends EventEmitter {
      */
     public async stop(): Promise<void> {
         this.unscheduleReconnect();
-        this.unscheduleWatchdog();
+
+        if (this.pingTimer) {
+            clearInterval(this.pingTimer);
+            this.pingTimer = undefined;
+        }
 
         if (this.webSocket) {
             this.webSocket.close();
@@ -211,6 +162,35 @@ export class SenseClient extends EventEmitter {
             this.emit("devices", response.data);
             return response.data;
         }
+    }
+
+    /**
+     * The authenticate function is used to authenticate the user with the Sense API.
+     * It uses the email and password provided in the options object to make a POST request
+     * to /authenticate endpoint, which returns an access token that will be used for subsequent requests.
+     *
+     * @returns true if the authentication was successful, false otherwise
+     */
+    private async authenticate(): Promise<boolean> {
+        this._account = undefined;
+        const response = await this.httpsClient.post<SenseAuthResponse>(
+            "authenticate", stringify({
+                email: this.options.email,
+                password: this.options.password,
+                remember_me: true
+            }), {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            }).catch((error) => this.httpErrorHandler(error));
+        if (response?.data?.authorized) {
+            this.httpsClient.defaults.headers.common["Authorization"] = "bearer " + response.data.access_token;
+            this._account = response.data;
+            this.emit("authenticated", response.data);
+            return true;
+        }
+        this._account = undefined;
+        return false;
     }
 
     /**
@@ -246,12 +226,27 @@ export class SenseClient extends EventEmitter {
 
         // Cancel any pending reconnect attempts
         this.unscheduleReconnect();
+
+        // Schedule pings to keep the connection alive
+        this.pingTimer = setInterval(() => this.webSocket?.ping(), PING_INTERVAL);
     }
 
-    private async onDisconnected(): Promise<void> {
-        this.emit("disconnected");
+    /**
+     * The onDisconnected function is called when the client disconnects from the server.
+     * It emits a "disconnected" event with a reason string, and if autoReconnect is enabled,
+     * it will schedule a reconnection attempt.
+     *
+     * @param reason: string Pass the reason for disconnection
+     *
+     * @emits disconnected
+     */
+    private async onDisconnected(reason: string): Promise<void> {
+        this.emit("disconnected", reason);
+        if (this.pingTimer) {
+            clearInterval(this.pingTimer);
+            this.pingTimer = undefined;
+        }
         if (this.autoReconnect) {
-            await this.renewToken();
             this.scheduleReconnect();
         }
     }
@@ -263,15 +258,20 @@ export class SenseClient extends EventEmitter {
      * Otherwise, it emits a type-based event with the payload as its argument.
      *
      */
-    private onMessage(event: WebSocket.MessageEvent): void {
-        // Reset the watchdog timer
-        this.scheduleWatchdog();
-
+    private onMessage(data: WebSocket.RawData): void {
         try {
-            const json: SenseWebSocketMessage = JSON.parse(event.data.toString());
+            const json: SenseWebSocketMessage = JSON.parse(data.toString());
             if (json.type == "error") {
                 this.emit("error", new Error("sense error: " + json.payload.error_reason));
             } else {
+                /*
+                 * Message types:
+                 *      "hello": Initial message sent by the server
+                 *      "monitor_info": Monitor info update
+                 *      "data_change": Data change event
+                 *      "device_states": Device states
+                 *      "realtime_update": Realtime data update
+                 */
                 this.emit(json.type, json.payload);
             }
         } catch (error) {
@@ -280,15 +280,42 @@ export class SenseClient extends EventEmitter {
     }
 
     /**
+     * The renewToken function is used to renew the access token for a Sense account.
+     * This function should be called when the access token expires, which happens after 1 hour of inactivity.
+     * The function will automatically update the authorization header with the new access token and emit an event
+     * that can be listened to by other modules.
+     *
+     * @returns true if the token was renewed successfully, false otherwise
+     */
+    private async renewToken(): Promise<boolean> {
+        const response = await this.httpsClient.post<SenseAuthResponse>("renew", stringify({
+            "user_id": this._account?.user_id,
+            "refresh_token": this._account?.refresh_token
+        }), {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+        }).catch((error) => this.httpErrorHandler(error));
+        if (response?.data?.authorized) {
+            this.httpsClient.defaults.headers.common["Authorization"] = "bearer " + response.data.access_token;
+            this._account = { ...this._account, ...response.data };
+            this.emit("token", response.data);
+            return true;
+        }
+        this._account = undefined;
+        return false;
+    }
+
+    /**
      * Schedules a reconnect attempt to the panel.
      * If a reconnect attempt is not already in progress, a reconnect attempt will be scheduled after a delay.
      * The delay period doubles with each subsequent attempt up to a maximum of 60 seconds.
      */
     private scheduleReconnect(): void {
-        // Clear the watchdog timer if it is set
-        if (this.watchdogTimer) {
-            clearTimeout(this.watchdogTimer);
-            this.watchdogTimer = undefined;
+        // Clear the ping timer if it is set
+        if (this.pingTimer) {
+            clearInterval(this.pingTimer);
+            this.pingTimer = undefined;
         }
 
         // Don't schedule reconnect if autoReconnect is disabled
@@ -307,19 +334,6 @@ export class SenseClient extends EventEmitter {
     }
 
     /**
-     * The scheduleWatchdog function is used to schedule a watchdog timer that will
-     * reconnect the client if it has not received any messages from the server in
-     * WATCHDOG_INTERVAL milliseconds.
-     */
-    private scheduleWatchdog(): void {
-        if (this.watchdogTimer) {
-            clearTimeout(this.watchdogTimer);
-        }
-
-        this.watchdogTimer = setTimeout(() => this.scheduleReconnect(), WATCHDOG_INTERVAL);
-    }
-
-    /**
      * The unscheduleReconnect function clears the reconnectTimer if it is set.
      * It also sets the reconnectInterval to its default value of RECONNECT_INTERVAL.
      */
@@ -328,16 +342,6 @@ export class SenseClient extends EventEmitter {
             clearTimeout(this.reconnectTimer);
             this.reconnectTimer = undefined;
             this.reconnectInterval = RECONNECT_INTERVAL;
-        }
-    }
-
-    /**
-     * The unscheduleWatchdog function clears the watchdog timer.
-     */
-    private unscheduleWatchdog(): void {
-        if (this.watchdogTimer) {
-            clearTimeout(this.watchdogTimer);
-            this.watchdogTimer = undefined;
         }
     }
 }
