@@ -28,15 +28,15 @@ class SenseEnergyMonitor extends Adapter {
         // Create a new SenseClient instance and authenticate with the Sense API
         const client = new SenseClient({ email: this.config.email, password: this.config.password });
         client.on("authenticated", async () => {
-            this.log.info("authenticated to Sense");
+            this.log.info("authenticated to sense api");
         });
 
         client.on("connected", async () => {
-            this.log.info("connected to Sense websocket");
+            this.log.info("connected to real-time websocket");
         });
 
         client.on("hello", async () => {
-            this.log.info("started receiving data from websocket");
+            this.log.info("started receiving real-time data");
             await this.setStateAsync("info.connection", true, true);
         });
 
@@ -45,9 +45,8 @@ class SenseEnergyMonitor extends Adapter {
             await this.setStateAsync("info.connection", false, true);
         });
 
-        client.on("error", async (error) => {
+        client.on("error", (error) => {
             this.log.error(error);
-            await this.setStateAsync("info.connection", false, true);
         })
 
         // Create a new SenseParser instance and configure events
@@ -58,6 +57,7 @@ class SenseEnergyMonitor extends Adapter {
         });
         client.on("realtime_update", parser.parse.bind(parser));
 
+        // Set the expire time for all states to twice the maximum of the device and general update intervals
         this.expireSeconds = Math.max(this.config.deviceUpdateSeconds, this.config.generalUpdateSeconds) * 2;
 
         parser.on("gridVoltages", (voltages: number[]) => {

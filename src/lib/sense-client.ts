@@ -1,10 +1,8 @@
 import { EventEmitter } from "events";
 import WebSocket from "ws";
 import axios from "axios";
-import { SenseAuthResponse, SenseDevices } from "../interfaces"
+import { SenseAuthResponse } from "../interfaces"
 import { stringify } from "querystring";
-import memoize from "memoizee";
-import { clearInterval } from "timers";
 import jwt from "jsonwebtoken";
 
 const API_URL = "https://api.sense.com/apiservice/api/v1/"
@@ -12,11 +10,8 @@ const WS_URL = "wss://clientrt.sense.com/monitors/%id%/realtimefeed"
 
 const RECONNECT_INTERVAL = 10000; // Initial reconnect interval (10 seconds)
 const MAX_RECONNECT_INTERVAL = 60000; // Maximum reconnect interval (60 seconds)
-const PING_INTERVAL = 60000; // Send websocket ping every interval (60 seconds)
 
-const API_MAX_AGE = 300000 // 5 minutes
 const API_TIMEOUT = 5000 // 5 seconds
-const WSS_TIMEOUT = 5000 // 5 seconds
 
 export type SenseClientOptions = {
     email: string;
@@ -32,10 +27,8 @@ type SenseWebSocketMessage = {
  * SenseClient is the main class for interacting with the Sense API.
  */
 export class SenseClient extends EventEmitter {
-    private readonly _getDevicesMemoized;
     private readonly httpsClient;
     private options;
-    private pingTimer?: NodeJS.Timer;
     private reconnectInterval = RECONNECT_INTERVAL;
     private reconnectTimer?: NodeJS.Timeout;
     private webSocket?: WebSocket;
@@ -50,9 +43,6 @@ export class SenseClient extends EventEmitter {
             baseURL: API_URL,
             timeout: API_TIMEOUT
         });
-
-        // Memoize the getDevices function to prevent unnecessary requests to the Sense API
-        this._getDevicesMemoized = memoize(this._getDevices, { promise: true, maxAge: API_MAX_AGE });
     }
 
     private _account?: SenseAuthResponse;
@@ -89,16 +79,15 @@ export class SenseClient extends EventEmitter {
      *
      * @param token: string Pass in the token
      *
-     * @return True if the token has expired, and false otherwise
+     * @return True if the token has expired or is invalid and false otherwise.
      */
     private static isTokenExpired(token: string): boolean {
-        const jwtPartsCount = 5;
         const tokenParts = token.split(".");
 
-        if (tokenParts.length !== jwtPartsCount) {
-            return true;
-        }
+        // Check if the token has the expected number of parts
+        if (tokenParts.length !== 5) return true;
 
+        // Decode the token and get the expiration timestamp
         let jwtPayload: { exp: number } | null;
         try {
             jwtPayload = jwt.decode(tokenParts.slice(2).join(".")) as { exp: number };
@@ -106,9 +95,8 @@ export class SenseClient extends EventEmitter {
             return true;
         }
 
-        if (!jwtPayload) {
-            return true;
-        }
+        // Check if we got an expiration timestamp
+        if (!jwtPayload?.exp) return true;
 
         // Convert milliseconds to seconds for comparison
         const currentTimestampInSeconds = Date.now() / 1000;
@@ -126,6 +114,9 @@ export class SenseClient extends EventEmitter {
 
     /**
      * The start function is used to start the websocket connection that provides real-time energy data events.
+     * It will attempt to authenticate the user if the token has expired or is not present.
+     * If the authentication is successful, it will then attempt to connect to the websocket.
+     * Sense will drop the connection after 15 minutes so the client will automatically reconnect.
      */
     public async start(): Promise<void> {
         // Schedule a reconnect attempt in case of failure
@@ -141,12 +132,11 @@ export class SenseClient extends EventEmitter {
         const params = stringify({ access_token: token });
         const wsUrl = WS_URL.replace("%id%", id) + "?" + params;
 
-        const ws = new WebSocket(wsUrl, [], { timeout: WSS_TIMEOUT });
+        const ws = new WebSocket(wsUrl, [], { timeout: API_TIMEOUT });
         ws.on("open", () => this.onConnected());
         ws.on("message", (event) => this.onMessage(event));
         ws.on("close", (code, reason) => this.onDisconnected(code, reason));
         ws.on("error", (error) => this.emit("error", error));
-        ws.on("pong", () => this.emit("pong"));
         this.webSocket = ws;
     }
 
@@ -156,31 +146,9 @@ export class SenseClient extends EventEmitter {
     public async stop(): Promise<void> {
         this.unscheduleReconnect();
 
-        if (this.pingTimer) {
-            clearInterval(this.pingTimer);
-            this.pingTimer = undefined;
-        }
-
         if (this.webSocket) {
             this.webSocket.close();
             this.webSocket = undefined;
-        }
-    }
-
-    /**
-     * The getDevices function is used to retrieve the devices associated with a monitor.
-     *
-     * @param monitorId: number Specify the monitor to get data from
-     *
-     * @return A sense device array
-     */
-    private async _getDevices(monitorId: number): Promise<SenseDevices | undefined> {
-        const response = await this.httpsClient.get<SenseDevices>(
-            `monitors/${monitorId}/devices`).catch((error) => this.httpErrorHandler(error));
-        if (response?.data) {
-            console.log(JSON.stringify(response.data));
-            this.emit("devices", response.data);
-            return response.data;
         }
     }
 
@@ -269,9 +237,6 @@ export class SenseClient extends EventEmitter {
 
         // Cancel any pending reconnect attempts
         this.unscheduleReconnect();
-
-        // Schedule pings to keep the connection alive
-        this.pingTimer = setInterval(() => this.webSocket?.ping(), PING_INTERVAL);
     }
 
     /**
@@ -286,10 +251,6 @@ export class SenseClient extends EventEmitter {
      */
     private async onDisconnected(code: number, reason: Buffer): Promise<void> {
         this.emit("disconnected", code, reason);
-        if (this.pingTimer) {
-            clearInterval(this.pingTimer);
-            this.pingTimer = undefined;
-        }
         if (this.autoReconnect) {
             this.scheduleReconnect();
         }
@@ -356,12 +317,6 @@ export class SenseClient extends EventEmitter {
      * The delay period doubles with each subsequent attempt up to a maximum of 60 seconds.
      */
     private scheduleReconnect(): void {
-        // Clear the ping timer if it is set
-        if (this.pingTimer) {
-            clearInterval(this.pingTimer);
-            this.pingTimer = undefined;
-        }
-
         // Don't schedule reconnect if autoReconnect is disabled
         if (!this._autoReconnect) return;
 

@@ -16,22 +16,21 @@ class SenseEnergyMonitor extends import_adapter_core.Adapter {
     this.setState("info.connection", false, true);
     const client = new import_lib.SenseClient({ email: this.config.email, password: this.config.password });
     client.on("authenticated", async () => {
-      this.log.info("authenticated to Sense");
+      this.log.info("authenticated to sense api");
     });
     client.on("connected", async () => {
-      this.log.info("connected to Sense websocket");
+      this.log.info("connected to real-time websocket");
     });
     client.on("hello", async () => {
-      this.log.info("started receiving data from websocket");
+      this.log.info("started receiving real-time data");
       await this.setStateAsync("info.connection", true, true);
     });
     client.on("disconnected", async (code, reason) => {
       this.log.info(`disconnected from websocket - code ${code} ${reason.toString()}`);
       await this.setStateAsync("info.connection", false, true);
     });
-    client.on("error", async (error) => {
+    client.on("error", (error) => {
       this.log.error(error);
-      await this.setStateAsync("info.connection", false, true);
     });
     const parser = new import_lib.SenseParser({
       deviceFilter: this.config.deviceFilter,
