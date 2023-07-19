@@ -36,12 +36,12 @@ class SenseEnergyMonitor extends Adapter {
         });
 
         client.on("hello", async () => {
-            this.log.info("receiving data from Sense");
+            this.log.info("started receiving data from websocket");
             await this.setStateAsync("info.connection", true, true);
         });
 
-        client.on("disconnected", async (reason) => {
-            this.log.info("disconnected from Sense API due to " + reason);
+        client.on("disconnected", async (code: number, reason: Buffer) => {
+            this.log.info(`disconnected from websocket - code ${code} ${reason.toString()}`);
             await this.setStateAsync("info.connection", false, true);
         });
 

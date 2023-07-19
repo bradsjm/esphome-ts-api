@@ -33,8 +33,9 @@ var import_axios = __toESM(require("axios"));
 var import_querystring = require("querystring");
 var import_memoizee = __toESM(require("memoizee"));
 var import_timers = require("timers");
+var import_jsonwebtoken = __toESM(require("jsonwebtoken"));
 const API_URL = "https://api.sense.com/apiservice/api/v1/";
-const WS_URL = "wss://clientrt.sense.com/monitors/%id%/realtimefeed?access_token=%token%";
+const WS_URL = "wss://clientrt.sense.com/monitors/%id%/realtimefeed";
 const RECONNECT_INTERVAL = 1e4;
 const MAX_RECONNECT_INTERVAL = 6e4;
 const PING_INTERVAL = 6e4;
@@ -62,8 +63,23 @@ class SenseClient extends import_events.EventEmitter {
   set autoReconnect(value) {
     this._autoReconnect = value;
   }
-  async getDevices(monitorId) {
-    return this._getDevicesMemoized(monitorId);
+  static isTokenExpired(token) {
+    const jwtPartsCount = 5;
+    const tokenParts = token.split(".");
+    if (tokenParts.length !== jwtPartsCount) {
+      return true;
+    }
+    let jwtPayload;
+    try {
+      jwtPayload = import_jsonwebtoken.default.decode(tokenParts.slice(2).join("."));
+    } catch (e) {
+      return true;
+    }
+    if (!jwtPayload) {
+      return true;
+    }
+    const currentTimestampInSeconds = Date.now() / 1e3;
+    return currentTimestampInSeconds >= jwtPayload.exp;
   }
   async logout() {
     await this.httpsClient.get("logout");
@@ -72,18 +88,17 @@ class SenseClient extends import_events.EventEmitter {
   }
   async start() {
     this.scheduleReconnect();
-    if (!await this.authenticate()) {
+    if (!await this.authorize()) {
       return;
     }
     const id = String(this._account.monitors[0].id);
     const token = this._account.access_token;
-    const wsUrl = WS_URL.replace("%id%", id).replace("%token%", token);
-    const ws = new import_ws.default(wsUrl, [], {
-      timeout: WSS_TIMEOUT
-    });
+    const params = (0, import_querystring.stringify)({ access_token: token });
+    const wsUrl = WS_URL.replace("%id%", id) + "?" + params;
+    const ws = new import_ws.default(wsUrl, [], { timeout: WSS_TIMEOUT });
     ws.on("open", () => this.onConnected());
     ws.on("message", (event) => this.onMessage(event));
-    ws.on("close", (code, reason) => this.onDisconnected(reason.toString()));
+    ws.on("close", (code, reason) => this.onDisconnected(code, reason));
     ws.on("error", (error) => this.emit("error", error));
     ws.on("pong", () => this.emit("pong"));
     this.webSocket = ws;
@@ -116,8 +131,7 @@ class SenseClient extends import_events.EventEmitter {
       "authenticate",
       (0, import_querystring.stringify)({
         email: this.options.email,
-        password: this.options.password,
-        remember_me: true
+        password: this.options.password
       }),
       {
         headers: {
@@ -133,6 +147,16 @@ class SenseClient extends import_events.EventEmitter {
     }
     this._account = void 0;
     return false;
+  }
+  async authorize() {
+    var _a;
+    if (((_a = this._account) == null ? void 0 : _a.access_token) == null) {
+      return this.authenticate();
+    }
+    if (this._account.refresh_token && SenseClient.isTokenExpired(this._account.access_token)) {
+      return this.renewToken();
+    }
+    return true;
   }
   httpErrorHandler(error) {
     let errorString = void 0;
@@ -161,8 +185,8 @@ class SenseClient extends import_events.EventEmitter {
       return (_a = this.webSocket) == null ? void 0 : _a.ping();
     }, PING_INTERVAL);
   }
-  async onDisconnected(reason) {
-    this.emit("disconnected", reason);
+  async onDisconnected(code, reason) {
+    this.emit("disconnected", code, reason);
     if (this.pingTimer) {
       (0, import_timers.clearInterval)(this.pingTimer);
       this.pingTimer = void 0;

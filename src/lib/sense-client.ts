@@ -5,9 +5,10 @@ import { SenseAuthResponse, SenseDevices } from "../interfaces"
 import { stringify } from "querystring";
 import memoize from "memoizee";
 import { clearInterval } from "timers";
+import jwt from "jsonwebtoken";
 
 const API_URL = "https://api.sense.com/apiservice/api/v1/"
-const WS_URL = "wss://clientrt.sense.com/monitors/%id%/realtimefeed?access_token=%token%"
+const WS_URL = "wss://clientrt.sense.com/monitors/%id%/realtimefeed"
 
 const RECONNECT_INTERVAL = 10000; // Initial reconnect interval (10 seconds)
 const MAX_RECONNECT_INTERVAL = 60000; // Maximum reconnect interval (60 seconds)
@@ -84,19 +85,38 @@ export class SenseClient extends EventEmitter {
     }
 
     /**
-     * The getDevices function is used to retrieve the devices associated with a monitor.
-     * This function is memoized to prevent unnecessary requests to the Sense API.
+     * The isTokenExpired function checks to see if the token has expired.
      *
-     * @param monitorId: number Specify the monitor to get data from
+     * @param token: string Pass in the token
      *
-     * @return A sense device array
+     * @return True if the token has expired, and false otherwise
      */
-    public async getDevices(monitorId: number): Promise<SenseDevices | undefined> {
-        return this._getDevicesMemoized(monitorId);
+    private static isTokenExpired(token: string): boolean {
+        const jwtPartsCount = 5;
+        const tokenParts = token.split(".");
+
+        if (tokenParts.length !== jwtPartsCount) {
+            return true;
+        }
+
+        let jwtPayload: { exp: number } | null;
+        try {
+            jwtPayload = jwt.decode(tokenParts.slice(2).join(".")) as { exp: number };
+        } catch (e) {
+            return true;
+        }
+
+        if (!jwtPayload) {
+            return true;
+        }
+
+        // Convert milliseconds to seconds for comparison
+        const currentTimestampInSeconds = Date.now() / 1000;
+        return currentTimestampInSeconds >= jwtPayload.exp;
     }
 
     /**
-     * The logout function logs the user out of Sense.
+     * The logout function logs the user out of Sense and removes the login token.
      */
     public async logout(): Promise<void> {
         await this.httpsClient.get("logout");
@@ -106,25 +126,25 @@ export class SenseClient extends EventEmitter {
 
     /**
      * The start function is used to start the websocket connection that provides real-time energy data events.
-     * It will throw an error if you have not authenticated first.
      */
     public async start(): Promise<void> {
         // Schedule a reconnect attempt in case of failure
         this.scheduleReconnect();
 
-        if (!await this.authenticate()) {
+        // Attempt to authenticate or renew the token
+        if (!await this.authorize()) {
             return;
         }
 
         const id = String(this._account!.monitors[0].id);
         const token = this._account!.access_token;
-        const wsUrl = WS_URL.replace("%id%", id).replace("%token%", token);
-        const ws = new WebSocket(wsUrl, [], {
-            timeout: WSS_TIMEOUT,
-        });
+        const params = stringify({ access_token: token });
+        const wsUrl = WS_URL.replace("%id%", id) + "?" + params;
+
+        const ws = new WebSocket(wsUrl, [], { timeout: WSS_TIMEOUT });
         ws.on("open", () => this.onConnected());
         ws.on("message", (event) => this.onMessage(event));
-        ws.on("close", (code, reason) => this.onDisconnected(reason.toString()));
+        ws.on("close", (code, reason) => this.onDisconnected(code, reason));
         ws.on("error", (error) => this.emit("error", error));
         ws.on("pong", () => this.emit("pong"));
         this.webSocket = ws;
@@ -176,8 +196,7 @@ export class SenseClient extends EventEmitter {
         const response = await this.httpsClient.post<SenseAuthResponse>(
             "authenticate", stringify({
                 email: this.options.email,
-                password: this.options.password,
-                remember_me: true
+                password: this.options.password
             }), {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
@@ -191,6 +210,30 @@ export class SenseClient extends EventEmitter {
         }
         this._account = undefined;
         return false;
+    }
+
+    /**
+     * The authorize function is used to authenticate the user and get a token.
+     * If the user has already been authenticated, it will check if the refresh token is expired.
+     * If it's not expired, then it will renew the access token using that refresh token.
+     * Otherwise, if there's no existing authentication or if there's an existing authentication but with an expired
+     * refresh_token, then we'll call authenticate() to get a new set of tokens (access_token and refresh_token).
+     *
+     * @return A boolean indicating whether the authorization was successful or not.
+     */
+    private async authorize(): Promise<boolean> {
+        // Use Case 1: There is no token
+        if (this._account?.access_token == null) {
+            return this.authenticate();
+        }
+
+        // Use Case 2: There is a token but it has expired
+        if (this._account.refresh_token && SenseClient.isTokenExpired(this._account.access_token)) {
+            return this.renewToken();
+        }
+
+        // Use Case 3: There is a token and it has not expired
+        return true;
     }
 
     /**
@@ -236,12 +279,13 @@ export class SenseClient extends EventEmitter {
      * It emits a "disconnected" event with a reason string, and if autoReconnect is enabled,
      * it will schedule a reconnection attempt.
      *
+     * @param code number Pass the close code
      * @param reason: string Pass the reason for disconnection
      *
      * @emits disconnected
      */
-    private async onDisconnected(reason: string): Promise<void> {
-        this.emit("disconnected", reason);
+    private async onDisconnected(code: number, reason: Buffer): Promise<void> {
+        this.emit("disconnected", code, reason);
         if (this.pingTimer) {
             clearInterval(this.pingTimer);
             this.pingTimer = undefined;
