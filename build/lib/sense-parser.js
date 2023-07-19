@@ -52,8 +52,11 @@ class SenseParser extends import_events.EventEmitter {
       update.channels = update.channels.map((watts) => Math.round(watts));
       this.emitIfDue("gridWatts", "grid", update.channels, this.options.generalUpdateSeconds);
     }
-    this.handleMissingDevices(update.devices);
-    this.parseActiveDevices(update.devices);
+    const filtered = update.devices.filter(
+      (device) => !this.options.deviceFilter.includes(device.name) && !this.options.deviceFilter.includes(device.id) && device.tags["DeviceListAllowed"] === "true" && !SenseParser.isLocallyAdministered(String(device.tags["DUID"]))
+    );
+    this.handleMissingDevices(filtered);
+    this.parseActiveDevices(filtered);
   }
   emitIfDue(eventName, key, data, interval) {
     const currentTime = Date.now();
@@ -71,10 +74,7 @@ class SenseParser extends import_events.EventEmitter {
     this.previousDeviceList = deviceList;
   }
   parseActiveDevices(devices) {
-    const filtered = devices.filter(
-      (device) => !this.options.deviceFilter.includes(device.name) && !this.options.deviceFilter.includes(device.id) && device.tags["DeviceListAllowed"] === "true" && !SenseParser.isLocallyAdministered(String(device.tags["DUID"]))
-    );
-    filtered.forEach((device) => {
+    devices.forEach((device) => {
       device.w = Math.round(device.w);
       const interval = GENERIC_DEVICES.includes(device.id) ? this.options.generalUpdateSeconds : this.options.deviceUpdateSeconds;
       device.icon = (0, import_device_icons.getIcon)(device.icon);

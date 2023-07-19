@@ -69,11 +69,18 @@ export class SenseParser extends EventEmitter {
             this.emitIfDue("gridWatts", "grid", update.channels, this.options.generalUpdateSeconds);
         }
 
+        const filtered = update.devices.filter((device) =>
+            !this.options.deviceFilter.includes(device.name) &&
+            !this.options.deviceFilter.includes(device.id) &&
+            device.tags["DeviceListAllowed"] === "true" &&
+            !SenseParser.isLocallyAdministered(String(device.tags["DUID"]))
+        );
+
         // Detect devices no longer active
-        this.handleMissingDevices(update.devices);
+        this.handleMissingDevices(filtered);
 
         // Parse active devices
-        this.parseActiveDevices(update.devices);
+        this.parseActiveDevices(filtered);
     }
 
     /**
@@ -121,15 +128,8 @@ export class SenseParser extends EventEmitter {
      * @param devices: {SenseDevice[]} array of devices from the sense api
      */
     private parseActiveDevices(devices: SenseDevice[]): void {
-        const filtered = devices.filter((device) =>
-            !this.options.deviceFilter.includes(device.name) &&
-            !this.options.deviceFilter.includes(device.id) &&
-            device.tags["DeviceListAllowed"] === "true" &&
-            !SenseParser.isLocallyAdministered(String(device.tags["DUID"]))
-        );
-
         // Emit device event for each device
-        filtered.forEach((device) => {
+        devices.forEach((device) => {
             // Round watt value to the nearest integer
             device.w = Math.round(device.w);
 
