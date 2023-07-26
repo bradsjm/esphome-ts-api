@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/interfaces/index.ts"],
-  "sourcesContent": ["export { SenseAuthResponse, SenseMonitor } from \"./sense-auth-response\";\nexport { SenseDevice, SenseDevices } from \"./sense-devices\";\nexport { SenseUpdate } from \"./sense-update\";\nexport { SenseSettings } from \"../types/sense-settings\";\nexport { SenseMonitorAttributes } from \"../types/sense-monitor-attributes\";\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,iCAAgD;AAChD,2BAA0C;AAC1C,0BAA4B;AAC5B,4BAA8B;AAC9B,sCAAuC;",
-  "names": []
-}

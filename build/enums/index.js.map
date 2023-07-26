@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/enums/index.ts"],
-  "sourcesContent": ["export { ControlCapability } from \"./control-capability\";\nexport { IntegrationType } from \"./integration-type\";\n"],
-  "mappings": ";;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,gCAAkC;AAClC,8BAAgC;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/types/sense-settings.ts"],
-  "sourcesContent": ["export type SenseSettings = {\n    user_id: number\n    version: number\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
-  "names": []
-}

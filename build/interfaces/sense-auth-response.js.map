@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/interfaces/sense-auth-response.ts"],
-  "sourcesContent": ["import { SenseMonitorAttributes, SenseSettings } from \"../types\";\n\nexport interface SenseAuthResponse {\n    ab_cohort: string\n    access_token: string\n    account_id: number\n    authorized: boolean\n    bridge_server: string\n    date_created: string\n    monitors: SenseMonitor[]\n    refresh_token: string\n    settings: SenseSettings\n    totp_enabled: boolean\n    user_id: number\n}\n\nexport interface SenseMonitor {\n    attributes: SenseMonitorAttributes\n    hardware_type: string\n    id: number\n    online: boolean\n    serial_number: string\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
-  "names": []
-}

@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/interfaces/sense-update.ts"],
-  "sourcesContent": ["import { SenseDevice } from \"./sense-devices\";\n\nexport interface SenseUpdate {\n    _stats: { [key: string]: number };\n    c: number;\n    channels: number[];\n    d_w: number;\n    defaultCost: number;\n    devices: SenseDevice[];\n    epoch: number;\n    frame: number;\n    grid_w: number;\n    hz: number;\n    voltage?: number[];\n    w: number;\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
-  "names": []
-}

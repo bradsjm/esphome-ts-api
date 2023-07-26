@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/interfaces/sense-devices.ts"],
-  "sourcesContent": ["export type SenseDevices = ReadonlyArray<SenseDevice>;\n\nexport interface SenseDevice {\n    icon: string;\n    id: string;\n    location?: string;\n    make?: string;\n    model?: string;\n    name: string;\n    tags: Record<string, boolean | string | number | []>;\n    w: number;\n}\n"],
-  "mappings": ";;;;;;;;;;;;;;AAAA;AAAA;",
-  "names": []
-}
