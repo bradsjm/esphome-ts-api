@@ -178,7 +178,7 @@ class TcpConnection extends events_1.default {
      *
      * @returns {Promise<boolean>} A promise that resolves to true if the data was written successfully.
      */
-    async write(data, encoding) {
+    async write(data = new Uint8Array(), encoding) {
         if (this._socket.readyState !== "open")
             return Promise.resolve(false);
         let payload;

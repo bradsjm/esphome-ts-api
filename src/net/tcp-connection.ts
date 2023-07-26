@@ -1,5 +1,5 @@
-import { Socket } from "net";
 import * as net from "net";
+import { Socket } from "net";
 import EventEmitter from "events";
 
 /**
@@ -247,7 +247,7 @@ export class TcpConnection extends EventEmitter {
      *
      * @returns {Promise<boolean>} A promise that resolves to true if the data was written successfully.
      */
-    public async write(data: PayloadTypes, encoding?: BufferEncoding): Promise<boolean> {
+    public async write(data: PayloadTypes = new Uint8Array(), encoding?: BufferEncoding): Promise<boolean> {
         if (this._socket.readyState !== "open") return Promise.resolve(false);
         let payload: Buffer;
 

@@ -11,6 +11,10 @@ export {
     IMessage,
     IResponseEntity,
     ServiceDiscovery,
+    DiscoveredDevice,
     Unsubscribe,
+    ApiClientBase,
+    ApiClientNoise,
+    ApiClientPlain,
     createApiClient
 } from "./net";

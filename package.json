@@ -1,62 +1,64 @@
 {
-    "name": "esphome-ts-api",
-    "version": "0.1.0",
-    "description": "",
-    "author": {
-        "name": "Jonathan Bradshaw",
-        "email": "jb@nrgup.net"
-    },
-    "homepage": "https://github.com/bradsjm/esphome-ts-api",
-    "license": "MIT",
-    "keywords": [
-        "esphome",
-        "esphomeapi",
-        "typescript"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:bradsjm/esphomtsapi.git"
-    },
-    "engines": {
-        "node": ">= 16"
-    },
-    "devDependencies": {
-        "@protobuf-ts/plugin": "^2.9.0",
-        "@tsconfig/node16": "^16.1.0",
-        "@types/chai": "^4.3.5",
-        "@types/mocha": "^10.0.1",
-        "@types/multicast-dns": "^7.2.1",
-        "@types/sinon": "^10.0.15",
-        "@typescript-eslint/eslint-plugin": "^6.2.0",
-        "@typescript-eslint/parser": "^6.2.0",
-        "chai": "^4.3.7",
-        "mocha": "^10.2.0",
-        "rimraf": "^5.0.1",
-        "sinon": "^15.2.0",
-        "ts-node": "^10.9.1",
-        "typescript": "~5.1.6"
-    },
-    "main": "build/index.js",
-    "files": [
-        "build/",
-        "LICENSE"
-    ],
-    "scripts": {
-        "prebuild": "npx rimraf build",
-        "build": "npx tsc",
-        "test": "npx mocha ./src/**/*.test.ts",
-        "check": "npx tsc --noEmit",
-        "lint": "npx eslint --ext .ts ./src/",
-        "download": "npx download-cli -o ./protos https://raw.githubusercontent.com/esphome/aioesphomeapi/main/aioesphomeapi/api.proto && ./node_modules/.bin/download --o ./protos https://raw.githubusercontent.com/esphome/aioesphomeapi/main/aioesphomeapi/api_options.proto",
-        "protoc": "npx protoc ./protos/api.proto ./protos/api_options.proto --ts_out ./src/protos --proto_path ./protos --ts_opt eslint_disable,add_pb_suffix,output_legacy_commonjs"
-    },
-    "bugs": {
-        "url": "https://github.com/bradsjm/esphome-ts-api/issues"
-    },
-    "readmeFilename": "README.md",
-    "dependencies": {
-        "@protobuf-ts/runtime": "^2.9.0",
-        "@richardhopton/noise-c.wasm": "^0.5.0",
-        "multicast-dns": "^7.2.5"
-    }
+  "name": "esphome-ts-api",
+  "version": "0.1.0",
+  "description": "",
+  "author": {
+    "name": "Jonathan Bradshaw",
+    "email": "jb@nrgup.net"
+  },
+  "homepage": "https://github.com/bradsjm/esphome-ts-api",
+  "license": "MIT",
+  "keywords": [
+    "esphome",
+    "esphomeapi",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:bradsjm/esphomtsapi.git"
+  },
+  "engines": {
+    "node": ">= 16"
+  },
+  "devDependencies": {
+    "@protobuf-ts/plugin": "^2.9.0",
+    "@tsconfig/node16": "^16.1.0",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/multicast-dns": "^7.2.1",
+    "@types/sinon": "^10.0.15",
+    "@typescript-eslint/eslint-plugin": "^6.2.0",
+    "@typescript-eslint/parser": "^6.2.0",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "rimraf": "^5.0.1",
+    "sinon": "^15.2.0",
+    "ts-node": "^10.9.1",
+    "typedoc": "^0.24.8",
+    "typescript": "~5.1.6"
+  },
+  "main": "build/index.js",
+  "files": [
+    "build/",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prebuild": "npx rimraf build",
+    "build": "npx tsc",
+    "test": "npx mocha ./src/**/*.test.ts",
+    "check": "npx tsc --noEmit",
+    "lint": "npx eslint --ext .ts ./src/",
+    "download": "npx download-cli -o ./protos https://raw.githubusercontent.com/esphome/aioesphomeapi/main/aioesphomeapi/api.proto && ./node_modules/.bin/download --o ./protos https://raw.githubusercontent.com/esphome/aioesphomeapi/main/aioesphomeapi/api_options.proto",
+    "protoc": "npx protoc ./protos/api.proto ./protos/api_options.proto --ts_out ./src/protos --proto_path ./protos --ts_opt eslint_disable,add_pb_suffix,output_legacy_commonjs",
+    "docs": "npx typedoc --readme ./README.md --name 'ESPHome Typescript API Client' --out ./docs ./src"
+  },
+  "bugs": {
+    "url": "https://github.com/bradsjm/esphome-ts-api/issues"
+  },
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "@protobuf-ts/runtime": "^2.9.0",
+    "@richardhopton/noise-c.wasm": "^0.5.0",
+    "multicast-dns": "^7.2.5"
+  }
 }
