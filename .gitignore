@@ -8,4 +8,4 @@ node_modules
 nbproject
 
 Thumbs.db
-_DS_Store
+.DS_Store
