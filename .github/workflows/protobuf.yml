@@ -1,4 +1,4 @@
-name: Weekly Update Check and Build
+name: Weekly Protobuf Update Check
 
 on:
   schedule:
