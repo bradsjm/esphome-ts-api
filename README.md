@@ -37,6 +37,8 @@ Use the following command to install the package:
 
 ## Usage
 
+See the [API Documentation](https://bradsjm.github.io/esphome-ts-api/).
+
 ## Example Usage
 
 The following example shows how to use the `createApiClient` factory to create a client and connect to an ESPHome
