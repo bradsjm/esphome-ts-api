@@ -24,34 +24,7 @@ export interface NetConnectionOpts extends net.TcpNetConnectOpts {
     autoReconnect?: boolean;
     maxBackoffTime?: number;
     maxReconnectAttempts?: number;
-    pingInterval?: number;
-    pingTimeout?: number;
     socket?: Socket;
-}
-
-/**
- * Represents a component that transforms data in the connection pipeline within their process function.
- * * Transformers are registered using the addInboundTransformer and addOutboundTransformer methods.
- * * Transformers are executed in the order they are registered.
- * * Transformers are asynchronous and must invoke the next function to continue the pipeline.
- * * Transformers can modify the data by assigning the result of the next function to the data parameter.
- */
-export interface ITransformer {
-    /**
-     * Handle inbound data.
-     * @param data The data to process.
-     * @param next The callback to pass the data onto the next pipeline component.
-     * @param error The callback to invoke if an error occurs.
-     */
-    handleRead?(data: Buffer, next: (data: Buffer) => void, error: (error: Error) => void): void;
-
-    /**
-     * Handle outbound data.
-     * @param data The data to process.
-     * @param next The callback to pass the data onto the next pipeline component.
-     * @param error The callback to invoke if an error occurs.
-     */
-    handleWrite?(data: Buffer, next: (data: Buffer) => void, error: (error: Error) => void): void;
 }
 
 /**
@@ -71,11 +44,9 @@ export interface ITransformer {
  *
  */
 export class TcpConnection extends EventEmitter {
-    protected pipeline: ITransformer[] = [];
     private readonly _socket: Socket;
     private readonly connectionOptions: NetConnectionOpts;
-    private pingTimer?: NodeJS.Timeout;
-    private watchdogTimer?: NodeJS.Timeout;
+    private readonly reconnectTimer: Timer;
 
     /**
      * Creates a new Connection ready to connect.
@@ -84,9 +55,6 @@ export class TcpConnection extends EventEmitter {
      * @param options.autoReconnect Whether to automatically reconnect when the connection is closed.
      * @param options.maxBackoffTime The maximum time to wait between reconnect attempts.
      * @param options.maxReconnectAttempts The maximum number of times to attempt to reconnect.
-     * @param options.pingInterval The interval at which to send ping payloads.
-     * @param options.pingPayload The payload to send when pinging.
-     * @param options.pingTimeout The time to wait for a response to a ping before reconnecting.
      * @param options.socket The socket to use for the connection.
      *
      * Other options are passed directly to net.connect().
@@ -110,76 +78,52 @@ export class TcpConnection extends EventEmitter {
             autoReconnect: true,
             maxReconnectAttempts: 60,
             maxBackoffTime: 90000,
-            pingInterval: 20000,
-            pingTimeout: 90000,
             noDelay: true,
             keepAlive: true,
             ...options
         };
         this._socket = this.connectionOptions.socket ?? new Socket(this.connectionOptions);
-        this._reconnectAttempts = 0;
-        this._wasManuallyClosed = false;
-
-        this.initialize();
+        this.reconnectTimer = new Timer(this.connect.bind(this), 1000);
+        this.registerHandlers();
     }
 
-    private _reconnectAttempts: number;
+    private _reconnectAttempts = 0;
 
     /**
      * Gets the number of times the connection has been reconnected.
      */
-    get reconnectAttempts(): number {
+    public get reconnectAttempts(): number {
         return this._reconnectAttempts;
     }
 
-    private _wasManuallyClosed: boolean;
+    private _wasManuallyClosed = false;
 
     /**
      * Gets whether the connection was manually closed.
      */
-    get wasManuallyClosed(): boolean {
+    public get wasManuallyClosed(): boolean {
         return this._wasManuallyClosed;
     }
 
     /**
      * Gets whether the connection is currently waiting to reconnect.
      */
-    get isReconnecting(): boolean {
-        return this._socket.readyState != "open" && this.watchdogTimer != undefined;
+    public get isReconnecting(): boolean {
+        return this._socket.readyState != "open" && this.reconnectTimer != undefined;
     }
 
     /**
      * Gets the current ready state of the underlying socket.
      */
-    get readyState(): net.SocketReadyState {
+    public get readyState(): net.SocketReadyState {
         return this._socket.readyState;
     }
 
     /**
      * Gets the underlying socket.
      */
-    get socket(): Socket {
+    public get socket(): Socket {
         return this._socket;
-    }
-
-    /**
-     * Registers a transformer in the pipeline.
-     * Transformers are executed in the order they are registered.
-     *
-     * @param transformer {ITransformer} The transformer to register.
-     *
-     * @returns {TcpConnection} The connection.
-     */
-    public addTransformer(transformer: ITransformer): TcpConnection {
-        this.pipeline.push(transformer);
-        return this;
-    }
-
-    /**
-     * Removes all the pipeline transformers.
-     */
-    public clearPipeline(): void {
-        this.pipeline = [];
     }
 
     /**
@@ -188,24 +132,16 @@ export class TcpConnection extends EventEmitter {
      * @emit error Emitted if an error occurs while connecting.
      */
     public connect(): void {
-        try {
-            this._socket.connect(this.connectionOptions);
-        } catch {
-            if (this.connectionOptions.autoReconnect && this._reconnectAttempts < this.connectionOptions.maxReconnectAttempts!) {
-                this.reconnect();
-            }
-        }
+        this._socket.connect(this.connectionOptions);
     }
 
     /**
      * The destroy function is used to close the socket and remove all listeners.
      */
     public destroy(): void {
-        this.clearWatchdogTimer();
-        this.clearPingTimer();
         this.removeAllListeners();
         this._socket.removeAllListeners();
-        this._socket.destroy();
+        this.disconnect(true);
     }
 
     /**
@@ -216,22 +152,12 @@ export class TcpConnection extends EventEmitter {
      */
     public disconnect(force: boolean = false): void {
         this._wasManuallyClosed = true;
-        this.clearWatchdogTimer();
-        this.clearPingTimer();
+        this.reconnectTimer.stop();
         if (force) {
             this._socket.resetAndDestroy();
         } else {
             this._socket.destroy();
         }
-    }
-
-    /**
-     * Removes a transformer from the pipeline.
-     *
-     * @param transformer {ITransformer} The transformer to remove.
-     */
-    public removeTransformer(transformer: ITransformer): void {
-        this.pipeline = this.pipeline.filter(t => t !== transformer);
     }
 
     /**
@@ -249,26 +175,13 @@ export class TcpConnection extends EventEmitter {
      */
     public async write(data: PayloadTypes = new Uint8Array(), encoding?: BufferEncoding): Promise<boolean> {
         if (this._socket.readyState !== "open") return Promise.resolve(false);
-        let payload: Buffer;
 
-        try {
-            // Convert the data to a buffer if it isn't already.
-            const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
-
-            // Process the data through the outbound pipeline.
-            payload = this.processPipeline(this.pipeline, buffer, "outbound");
-
-            if (!payload) return Promise.resolve(false);
-        } catch (error) {
-            if (error instanceof Error) {
-                this.emit("error", error);
-            }
-            return Promise.reject(error);
-        }
+        // Convert the data to a buffer if it isn't already.
+        const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
 
         // Write the data to the socket and return a promise.
         return new Promise<boolean>((resolve, reject) => {
-            this._socket.write(payload, encoding, (error) => {
+            this._socket.write(buffer, encoding, (error) => {
                 if (error) {
                     this.emit("error", error);
                     reject(error)
@@ -277,34 +190,6 @@ export class TcpConnection extends EventEmitter {
                 }
             });
         });
-    }
-
-    /**
-     * The addHandler function adds a handler to the socket.
-     *
-     * @param event {string} Specify the event that will be listened for
-     * @param handler {(...args: any[])} Pass in a function that will be called when the event is triggered
-     *
-     * @return The netconnection object
-     */
-    protected addHandler(event: string, handler: (...args: any[]) => void): void {
-        this._socket.on(event, handler);
-    }
-
-    /**
-     * Clears the ping timer.
-     */
-    protected clearPingTimer(): void {
-        if (this.pingTimer) clearInterval(this.pingTimer);
-        this.pingTimer = undefined;
-    }
-
-    /**
-     * Clears the reconnect watchdogTimer.
-     */
-    protected clearWatchdogTimer(): void {
-        if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
-        this.watchdogTimer = undefined;
     }
 
     /**
@@ -331,7 +216,6 @@ export class TcpConnection extends EventEmitter {
      */
     protected handleClose(hadError: boolean): void {
         this.emit("close", hadError);
-        this.clearPingTimer();
         this.reconnect();
     }
 
@@ -348,17 +232,15 @@ export class TcpConnection extends EventEmitter {
 
     /**
      * The handleData function is called when the socket receives data.
-     * It processes the data through a pipeline of filters, and then emits an event with the processed data.
      *
      * @param data {Buffer} Store the data in a buffer
      *
      * @emits "data" Emitted when data is received.
      */
     protected async handleData(data: Buffer): Promise<Buffer> {
-        const processedData = this.processPipeline(this.pipeline, data, "inbound");
-        this.emit("data", processedData);
-        this.clearWatchdogTimer();
-        return processedData;
+        this.emit("data", data);
+        this.reconnectTimer.stop();
+        return data;
     }
 
     /**
@@ -389,16 +271,11 @@ export class TcpConnection extends EventEmitter {
     /**
      * The handleReady function is called when the socket is ready to be used.
      * Triggered immediately after 'connect'.
-     * It emits a ready event, and starts the ping timer.
      *
      * @emits "ready" Emitted when the socket is ready to be used.
      */
     protected async handleReady(): Promise<void> {
         this.emit("ready");
-        this.clearPingTimer();
-        if (this.connectionOptions.pingInterval) {
-            this.pingTimer = setInterval(() => this.ping(), this.connectionOptions.pingInterval);
-        }
     }
 
     /**
@@ -410,71 +287,6 @@ export class TcpConnection extends EventEmitter {
     protected handleTimeout(): void {
         this.emit("timeout");
         this.reconnect();
-    }
-
-    /**
-     * Initializes the connection and adds event listeners.
-     */
-    protected initialize(): void {
-        // Invoked when data is received.
-        this.addHandler("data", this.handleData.bind(this));
-
-        // Invoked when the the connection has been closed by both ends and no more data will be transferred.
-        this.addHandler("close", this.handleClose.bind(this));
-
-        // Invoked when an error occurs.
-        this.addHandler("error", this.handlError.bind(this));
-
-        // Invoked when a socket connection is successfully established.
-        this.addHandler("connect", this.handleConnect.bind(this));
-
-        // Indicates that no more data can be read. Note that the socket may still be open at this point.
-        this.addHandler("end", this.handleEnd.bind(this));
-
-        // Invoked after resolving the host name but before connecting.
-        this.addHandler("lookup", this.handleLookup.bind(this));
-
-        // Invoked when the socket is ready to be used. Triggered immediately after 'connect'.
-        this.addHandler("ready", this.handleReady.bind(this));
-
-        // Invoked if the socket times out from inactivity.
-        this.addHandler("timeout", this.handleTimeout.bind(this));
-    }
-
-    /**
-     * Sends a ping event which should cause an appropriate ping packet to be dispatched.
-     * The connection will be closed/reconnected if a response is not received within the timeout.
-     *
-     * @emit ping Emitted when a ping payload is sent.
-     */
-    protected ping(): void {
-        if (!this.watchdogTimer && this.connectionOptions.pingTimeout) {
-            this.emit("ping");
-            this.clearWatchdogTimer();
-            this.watchdogTimer = setTimeout(() => this.reconnect(), this.connectionOptions.pingTimeout);
-        }
-    }
-
-    /**
-     * Processes data through a pipeline of transformers.
-     * Transformers are executed in the order they are registered.
-     *
-     * @param pipeline {ITransformer[]} The pipeline transformers to process the data through.
-     * @param data {Buffer} The data to process.
-     * @param direction {"inbound"|"outbound"} The direction of the data.
-     * @returns {Buffer|Uint8Array|string} The processed data.
-     */
-    protected processPipeline(pipeline: ITransformer[], data: Buffer, direction: "inbound" | "outbound"): Buffer {
-        let processedData = data;
-        const errorHandler: (error: Error) => void = (error: Error) => this.emit("error", error);
-        for (const transformer of pipeline) {
-            if (direction === "inbound" && transformer.handleRead) {
-                transformer.handleRead(processedData, (data) => processedData = data, errorHandler);
-            } else if (direction === "outbound" && transformer.handleWrite) {
-                transformer.handleWrite(processedData, (data) => processedData = data, errorHandler);
-            }
-        }
-        return processedData;
     }
 
     /**
@@ -496,9 +308,101 @@ export class TcpConnection extends EventEmitter {
         if (this.connectionOptions.autoReconnect && !this._wasManuallyClosed && this._reconnectAttempts < this.connectionOptions.maxReconnectAttempts!) {
             this._reconnectAttempts++;
             const delay = Math.min(1000 * Math.pow(2, this._reconnectAttempts), this.connectionOptions.maxBackoffTime!);
-            this.clearWatchdogTimer();
-            this.watchdogTimer = setTimeout(() => this.connect(), delay);
+            this.reconnectTimer.updateTimeout(delay).start();
             this.emit("reconnect", this._reconnectAttempts, delay);
         }
+    }
+
+    /**
+     * Initializes the event listeners.
+     */
+    protected registerHandlers(): void {
+        // Invoked when data is received.
+        this._socket.on("data", this.handleData.bind(this));
+
+        // Invoked when the the connection has been closed by both ends and no more data will be transferred.
+        this._socket.on("close", this.handleClose.bind(this));
+
+        // Invoked when an error occurs.
+        this._socket.on("error", this.handlError.bind(this));
+
+        // Invoked when a socket connection is successfully established.
+        this._socket.on("connect", this.handleConnect.bind(this));
+
+        // Indicates that no more data can be read. Note that the socket may still be open at this point.
+        this._socket.on("end", this.handleEnd.bind(this));
+
+        // Invoked after resolving the host name but before connecting.
+        this._socket.on("lookup", this.handleLookup.bind(this));
+
+        // Invoked when the socket is ready to be used. Triggered immediately after 'connect'.
+        this._socket.on("ready", this.handleReady.bind(this));
+
+        // Invoked if the socket times out from inactivity.
+        this._socket.on("timeout", this.handleTimeout.bind(this));
+    }
+}
+
+/**
+ * Timer class that provides a simple API for managing timers.
+ */
+class Timer {
+    private readonly callback: () => void;
+    private timeout: number;
+    private timerId: NodeJS.Timeout | undefined = undefined;
+
+    /**
+     * Constructs a new Timer.
+     * @param {() => void} callback - The function to be called when the timer expires.
+     * @param {number} initialTimeout - The initial timeout in milliseconds.
+     * @throws {Error} If the callback is not a function or if the initialTimeout is not a positive number.
+     */
+    constructor(callback: () => void, initialTimeout: number) {
+        if (typeof callback !== "function") {
+            throw new Error("callback must be a function");
+        }
+        if (initialTimeout < 0) {
+            throw new Error("initialTimeout must be a positive number");
+        }
+        this.callback = callback;
+        this.timeout = initialTimeout;
+    }
+
+    /**
+     * Starts the timer. If the timer is already running, it will be stopped and restarted.
+     */
+    start(): this {
+        if (this.timerId) {
+            clearTimeout(this.timerId);
+        }
+        this.timerId = setTimeout(this.callback, this.timeout);
+        return this;
+    }
+
+    /**
+     * Stops the timer if it is running.
+     */
+    stop(): this {
+        if (this.timerId) {
+            clearTimeout(this.timerId);
+            this.timerId = undefined;
+        }
+        return this;
+    }
+
+    /**
+     * Updates the timeout value and stops any running timer.
+     *
+     * @param {number} newTimeout - The new timeout in milliseconds.
+     * @throws {Error} If newTimeout is not a positive number.
+     * @returns {Timer} The Timer instance for chaining calls.
+     */
+    updateTimeout(newTimeout: number): this {
+        if (newTimeout < 0) {
+            throw new Error("newTimeout must be a positive number");
+        }
+        this.stop();
+        this.timeout = newTimeout;
+        return this;
     }
 }
