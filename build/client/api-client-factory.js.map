@@ -1,0 +1,1 @@
+{"version":3,"file":"api-client-factory.js","sourceRoot":"","sources":["../../src/client/api-client-factory.ts"],"names":[],"mappings":";;;AACA,yDAAoD;AACpD,yDAAoD;AAEpD;;;;;GAKG;AACH,SAAgB,eAAe,CAAC,IAAiB;IAC7C,IAAI,IAAI,CAAC,aAAa,EAAE;QACpB,OAAO,IAAI,iCAAc,CAAC,IAAI,CAAC,CAAC;KACnC;SAAM;QACH,OAAO,IAAI,iCAAc,CAAC,IAAI,CAAC,CAAC;KACnC;AACL,CAAC;AAND,0CAMC"}

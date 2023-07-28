@@ -22,7 +22,7 @@ var APISourceType;
      * @generated from protobuf enum value: SOURCE_CLIENT = 2;
      */
     APISourceType[APISourceType["SOURCE_CLIENT"] = 2] = "SOURCE_CLIENT";
-})(APISourceType || (exports.APISourceType = APISourceType = {}));
+})(APISourceType = exports.APISourceType || (exports.APISourceType = {}));
 // @generated message type with reflection information, may provide speed optimized methods
 class void$$Type extends runtime_4.MessageType {
     constructor() {

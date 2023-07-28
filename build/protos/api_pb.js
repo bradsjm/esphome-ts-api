@@ -32,7 +32,7 @@ var EntityCategory;
      * @generated from protobuf enum value: ENTITY_CATEGORY_DIAGNOSTIC = 2;
      */
     EntityCategory[EntityCategory["DIAGNOSTIC"] = 2] = "DIAGNOSTIC";
-})(EntityCategory || (exports.EntityCategory = EntityCategory = {}));
+})(EntityCategory = exports.EntityCategory || (exports.EntityCategory = {}));
 /**
  * @generated from protobuf enum LegacyCoverState
  */
@@ -46,7 +46,7 @@ var LegacyCoverState;
      * @generated from protobuf enum value: LEGACY_COVER_STATE_CLOSED = 1;
      */
     LegacyCoverState[LegacyCoverState["CLOSED"] = 1] = "CLOSED";
-})(LegacyCoverState || (exports.LegacyCoverState = LegacyCoverState = {}));
+})(LegacyCoverState = exports.LegacyCoverState || (exports.LegacyCoverState = {}));
 /**
  * @generated from protobuf enum CoverOperation
  */
@@ -64,7 +64,7 @@ var CoverOperation;
      * @generated from protobuf enum value: COVER_OPERATION_IS_CLOSING = 2;
      */
     CoverOperation[CoverOperation["IS_CLOSING"] = 2] = "IS_CLOSING";
-})(CoverOperation || (exports.CoverOperation = CoverOperation = {}));
+})(CoverOperation = exports.CoverOperation || (exports.CoverOperation = {}));
 /**
  * @generated from protobuf enum LegacyCoverCommand
  */
@@ -82,7 +82,7 @@ var LegacyCoverCommand;
      * @generated from protobuf enum value: LEGACY_COVER_COMMAND_STOP = 2;
      */
     LegacyCoverCommand[LegacyCoverCommand["STOP"] = 2] = "STOP";
-})(LegacyCoverCommand || (exports.LegacyCoverCommand = LegacyCoverCommand = {}));
+})(LegacyCoverCommand = exports.LegacyCoverCommand || (exports.LegacyCoverCommand = {}));
 /**
  * @generated from protobuf enum FanSpeed
  */
@@ -100,7 +100,7 @@ var FanSpeed;
      * @generated from protobuf enum value: FAN_SPEED_HIGH = 2;
      */
     FanSpeed[FanSpeed["HIGH"] = 2] = "HIGH";
-})(FanSpeed || (exports.FanSpeed = FanSpeed = {}));
+})(FanSpeed = exports.FanSpeed || (exports.FanSpeed = {}));
 /**
  * @generated from protobuf enum FanDirection
  */
@@ -114,7 +114,7 @@ var FanDirection;
      * @generated from protobuf enum value: FAN_DIRECTION_REVERSE = 1;
      */
     FanDirection[FanDirection["REVERSE"] = 1] = "REVERSE";
-})(FanDirection || (exports.FanDirection = FanDirection = {}));
+})(FanDirection = exports.FanDirection || (exports.FanDirection = {}));
 /**
  * ==================== SENSOR ====================
  *
@@ -138,7 +138,7 @@ var SensorStateClass;
      * @generated from protobuf enum value: STATE_CLASS_TOTAL = 3;
      */
     SensorStateClass[SensorStateClass["STATE_CLASS_TOTAL"] = 3] = "STATE_CLASS_TOTAL";
-})(SensorStateClass || (exports.SensorStateClass = SensorStateClass = {}));
+})(SensorStateClass = exports.SensorStateClass || (exports.SensorStateClass = {}));
 /**
  * @generated from protobuf enum SensorLastResetType
  */
@@ -156,7 +156,7 @@ var SensorLastResetType;
      * @generated from protobuf enum value: LAST_RESET_AUTO = 2;
      */
     SensorLastResetType[SensorLastResetType["LAST_RESET_AUTO"] = 2] = "LAST_RESET_AUTO";
-})(SensorLastResetType || (exports.SensorLastResetType = SensorLastResetType = {}));
+})(SensorLastResetType = exports.SensorLastResetType || (exports.SensorLastResetType = {}));
 /**
  * ==================== SUBSCRIBE LOGS ====================
  *
@@ -196,7 +196,7 @@ var LogLevel;
      * @generated from protobuf enum value: LOG_LEVEL_VERY_VERBOSE = 7;
      */
     LogLevel[LogLevel["VERY_VERBOSE"] = 7] = "VERY_VERBOSE";
-})(LogLevel || (exports.LogLevel = LogLevel = {}));
+})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
 /**
  * ==================== USER-DEFINES SERVICES ====================
  *
@@ -236,7 +236,7 @@ var ServiceArgType;
      * @generated from protobuf enum value: SERVICE_ARG_TYPE_STRING_ARRAY = 7;
      */
     ServiceArgType[ServiceArgType["STRING_ARRAY"] = 7] = "STRING_ARRAY";
-})(ServiceArgType || (exports.ServiceArgType = ServiceArgType = {}));
+})(ServiceArgType = exports.ServiceArgType || (exports.ServiceArgType = {}));
 /**
  * ==================== CLIMATE ====================
  *
@@ -272,7 +272,7 @@ var ClimateMode;
      * @generated from protobuf enum value: CLIMATE_MODE_AUTO = 6;
      */
     ClimateMode[ClimateMode["AUTO"] = 6] = "AUTO";
-})(ClimateMode || (exports.ClimateMode = ClimateMode = {}));
+})(ClimateMode = exports.ClimateMode || (exports.ClimateMode = {}));
 /**
  * @generated from protobuf enum ClimateFanMode
  */
@@ -318,7 +318,7 @@ var ClimateFanMode;
      * @generated from protobuf enum value: CLIMATE_FAN_QUIET = 9;
      */
     ClimateFanMode[ClimateFanMode["CLIMATE_FAN_QUIET"] = 9] = "CLIMATE_FAN_QUIET";
-})(ClimateFanMode || (exports.ClimateFanMode = ClimateFanMode = {}));
+})(ClimateFanMode = exports.ClimateFanMode || (exports.ClimateFanMode = {}));
 /**
  * @generated from protobuf enum ClimateSwingMode
  */
@@ -340,7 +340,7 @@ var ClimateSwingMode;
      * @generated from protobuf enum value: CLIMATE_SWING_HORIZONTAL = 3;
      */
     ClimateSwingMode[ClimateSwingMode["CLIMATE_SWING_HORIZONTAL"] = 3] = "CLIMATE_SWING_HORIZONTAL";
-})(ClimateSwingMode || (exports.ClimateSwingMode = ClimateSwingMode = {}));
+})(ClimateSwingMode = exports.ClimateSwingMode || (exports.ClimateSwingMode = {}));
 /**
  * @generated from protobuf enum ClimateAction
  */
@@ -372,7 +372,7 @@ var ClimateAction;
      * @generated from protobuf enum value: CLIMATE_ACTION_FAN = 6;
      */
     ClimateAction[ClimateAction["FAN"] = 6] = "FAN";
-})(ClimateAction || (exports.ClimateAction = ClimateAction = {}));
+})(ClimateAction = exports.ClimateAction || (exports.ClimateAction = {}));
 /**
  * @generated from protobuf enum ClimatePreset
  */
@@ -410,7 +410,7 @@ var ClimatePreset;
      * @generated from protobuf enum value: CLIMATE_PRESET_ACTIVITY = 7;
      */
     ClimatePreset[ClimatePreset["ACTIVITY"] = 7] = "ACTIVITY";
-})(ClimatePreset || (exports.ClimatePreset = ClimatePreset = {}));
+})(ClimatePreset = exports.ClimatePreset || (exports.ClimatePreset = {}));
 /**
  * ==================== NUMBER ====================
  *
@@ -430,7 +430,7 @@ var NumberMode;
      * @generated from protobuf enum value: NUMBER_MODE_SLIDER = 2;
      */
     NumberMode[NumberMode["SLIDER"] = 2] = "SLIDER";
-})(NumberMode || (exports.NumberMode = NumberMode = {}));
+})(NumberMode = exports.NumberMode || (exports.NumberMode = {}));
 /**
  * ==================== LOCK ====================
  *
@@ -462,7 +462,7 @@ var LockState;
      * @generated from protobuf enum value: LOCK_STATE_UNLOCKING = 5;
      */
     LockState[LockState["UNLOCKING"] = 5] = "UNLOCKING";
-})(LockState || (exports.LockState = LockState = {}));
+})(LockState = exports.LockState || (exports.LockState = {}));
 /**
  * @generated from protobuf enum LockCommand
  */
@@ -480,7 +480,7 @@ var LockCommand;
      * @generated from protobuf enum value: LOCK_OPEN = 2;
      */
     LockCommand[LockCommand["LOCK_OPEN"] = 2] = "LOCK_OPEN";
-})(LockCommand || (exports.LockCommand = LockCommand = {}));
+})(LockCommand = exports.LockCommand || (exports.LockCommand = {}));
 /**
  * ==================== MEDIA PLAYER ====================
  *
@@ -504,7 +504,7 @@ var MediaPlayerState;
      * @generated from protobuf enum value: MEDIA_PLAYER_STATE_PAUSED = 3;
      */
     MediaPlayerState[MediaPlayerState["PAUSED"] = 3] = "PAUSED";
-})(MediaPlayerState || (exports.MediaPlayerState = MediaPlayerState = {}));
+})(MediaPlayerState = exports.MediaPlayerState || (exports.MediaPlayerState = {}));
 /**
  * @generated from protobuf enum MediaPlayerCommand
  */
@@ -530,7 +530,7 @@ var MediaPlayerCommand;
      * @generated from protobuf enum value: MEDIA_PLAYER_COMMAND_UNMUTE = 4;
      */
     MediaPlayerCommand[MediaPlayerCommand["UNMUTE"] = 4] = "UNMUTE";
-})(MediaPlayerCommand || (exports.MediaPlayerCommand = MediaPlayerCommand = {}));
+})(MediaPlayerCommand = exports.MediaPlayerCommand || (exports.MediaPlayerCommand = {}));
 /**
  * @generated from protobuf enum BluetoothDeviceRequestType
  */
@@ -564,7 +564,7 @@ var BluetoothDeviceRequestType;
      * @generated from protobuf enum value: BLUETOOTH_DEVICE_REQUEST_TYPE_CLEAR_CACHE = 6;
      */
     BluetoothDeviceRequestType[BluetoothDeviceRequestType["CLEAR_CACHE"] = 6] = "CLEAR_CACHE";
-})(BluetoothDeviceRequestType || (exports.BluetoothDeviceRequestType = BluetoothDeviceRequestType = {}));
+})(BluetoothDeviceRequestType = exports.BluetoothDeviceRequestType || (exports.BluetoothDeviceRequestType = {}));
 /**
  * @generated from protobuf enum VoiceAssistantEvent
  */
@@ -606,7 +606,7 @@ var VoiceAssistantEvent;
      * @generated from protobuf enum value: VOICE_ASSISTANT_TTS_END = 8;
      */
     VoiceAssistantEvent[VoiceAssistantEvent["VOICE_ASSISTANT_TTS_END"] = 8] = "VOICE_ASSISTANT_TTS_END";
-})(VoiceAssistantEvent || (exports.VoiceAssistantEvent = VoiceAssistantEvent = {}));
+})(VoiceAssistantEvent = exports.VoiceAssistantEvent || (exports.VoiceAssistantEvent = {}));
 /**
  * ==================== ALARM CONTROL PANEL ====================
  *
@@ -654,7 +654,7 @@ var AlarmControlPanelState;
      * @generated from protobuf enum value: ALARM_STATE_TRIGGERED = 9;
      */
     AlarmControlPanelState[AlarmControlPanelState["ALARM_STATE_TRIGGERED"] = 9] = "ALARM_STATE_TRIGGERED";
-})(AlarmControlPanelState || (exports.AlarmControlPanelState = AlarmControlPanelState = {}));
+})(AlarmControlPanelState = exports.AlarmControlPanelState || (exports.AlarmControlPanelState = {}));
 /**
  * @generated from protobuf enum AlarmControlPanelStateCommand
  */
@@ -688,7 +688,7 @@ var AlarmControlPanelStateCommand;
      * @generated from protobuf enum value: ALARM_CONTROL_PANEL_TRIGGER = 6;
      */
     AlarmControlPanelStateCommand[AlarmControlPanelStateCommand["ALARM_CONTROL_PANEL_TRIGGER"] = 6] = "ALARM_CONTROL_PANEL_TRIGGER";
-})(AlarmControlPanelStateCommand || (exports.AlarmControlPanelStateCommand = AlarmControlPanelStateCommand = {}));
+})(AlarmControlPanelStateCommand = exports.AlarmControlPanelStateCommand || (exports.AlarmControlPanelStateCommand = {}));
 // @generated message type with reflection information, may provide speed optimized methods
 class HelloRequest$Type extends runtime_5.MessageType {
     constructor() {

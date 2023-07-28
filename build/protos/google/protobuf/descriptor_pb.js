@@ -23,7 +23,7 @@ var ExtensionRangeOptions_VerificationState;
      * @generated from protobuf enum value: UNVERIFIED = 1;
      */
     ExtensionRangeOptions_VerificationState[ExtensionRangeOptions_VerificationState["UNVERIFIED"] = 1] = "UNVERIFIED";
-})(ExtensionRangeOptions_VerificationState || (exports.ExtensionRangeOptions_VerificationState = ExtensionRangeOptions_VerificationState = {}));
+})(ExtensionRangeOptions_VerificationState = exports.ExtensionRangeOptions_VerificationState || (exports.ExtensionRangeOptions_VerificationState = {}));
 /**
  * @generated from protobuf enum google.protobuf.FieldDescriptorProto.Type
  */
@@ -127,7 +127,7 @@ var FieldDescriptorProto_Type;
      * @generated from protobuf enum value: TYPE_SINT64 = 18;
      */
     FieldDescriptorProto_Type[FieldDescriptorProto_Type["SINT64"] = 18] = "SINT64";
-})(FieldDescriptorProto_Type || (exports.FieldDescriptorProto_Type = FieldDescriptorProto_Type = {}));
+})(FieldDescriptorProto_Type = exports.FieldDescriptorProto_Type || (exports.FieldDescriptorProto_Type = {}));
 /**
  * @generated from protobuf enum google.protobuf.FieldDescriptorProto.Label
  */
@@ -151,7 +151,7 @@ var FieldDescriptorProto_Label;
      * @generated from protobuf enum value: LABEL_REPEATED = 3;
      */
     FieldDescriptorProto_Label[FieldDescriptorProto_Label["REPEATED"] = 3] = "REPEATED";
-})(FieldDescriptorProto_Label || (exports.FieldDescriptorProto_Label = FieldDescriptorProto_Label = {}));
+})(FieldDescriptorProto_Label = exports.FieldDescriptorProto_Label || (exports.FieldDescriptorProto_Label = {}));
 /**
  * Generated classes can be optimized for speed or code size.
  *
@@ -183,7 +183,7 @@ var FileOptions_OptimizeMode;
      * @generated from protobuf enum value: LITE_RUNTIME = 3;
      */
     FileOptions_OptimizeMode[FileOptions_OptimizeMode["LITE_RUNTIME"] = 3] = "LITE_RUNTIME";
-})(FileOptions_OptimizeMode || (exports.FileOptions_OptimizeMode = FileOptions_OptimizeMode = {}));
+})(FileOptions_OptimizeMode = exports.FileOptions_OptimizeMode || (exports.FileOptions_OptimizeMode = {}));
 /**
  * @generated from protobuf enum google.protobuf.FieldOptions.CType
  */
@@ -210,7 +210,7 @@ var FieldOptions_CType;
      * @generated from protobuf enum value: STRING_PIECE = 2;
      */
     FieldOptions_CType[FieldOptions_CType["STRING_PIECE"] = 2] = "STRING_PIECE";
-})(FieldOptions_CType || (exports.FieldOptions_CType = FieldOptions_CType = {}));
+})(FieldOptions_CType = exports.FieldOptions_CType || (exports.FieldOptions_CType = {}));
 /**
  * @generated from protobuf enum google.protobuf.FieldOptions.JSType
  */
@@ -234,7 +234,7 @@ var FieldOptions_JSType;
      * @generated from protobuf enum value: JS_NUMBER = 2;
      */
     FieldOptions_JSType[FieldOptions_JSType["JS_NUMBER"] = 2] = "JS_NUMBER";
-})(FieldOptions_JSType || (exports.FieldOptions_JSType = FieldOptions_JSType = {}));
+})(FieldOptions_JSType = exports.FieldOptions_JSType || (exports.FieldOptions_JSType = {}));
 /**
  * If set to RETENTION_SOURCE, the option will be omitted from the binary.
  * Note: as of January 2023, support for this is in progress and does not yet
@@ -256,7 +256,7 @@ var FieldOptions_OptionRetention;
      * @generated from protobuf enum value: RETENTION_SOURCE = 2;
      */
     FieldOptions_OptionRetention[FieldOptions_OptionRetention["RETENTION_SOURCE"] = 2] = "RETENTION_SOURCE";
-})(FieldOptions_OptionRetention || (exports.FieldOptions_OptionRetention = FieldOptions_OptionRetention = {}));
+})(FieldOptions_OptionRetention = exports.FieldOptions_OptionRetention || (exports.FieldOptions_OptionRetention = {}));
 /**
  * This indicates the types of entities that the field may apply to when used
  * as an option. If it is unset, then the field may be freely used as an
@@ -307,7 +307,7 @@ var FieldOptions_OptionTargetType;
      * @generated from protobuf enum value: TARGET_TYPE_METHOD = 9;
      */
     FieldOptions_OptionTargetType[FieldOptions_OptionTargetType["TARGET_TYPE_METHOD"] = 9] = "TARGET_TYPE_METHOD";
-})(FieldOptions_OptionTargetType || (exports.FieldOptions_OptionTargetType = FieldOptions_OptionTargetType = {}));
+})(FieldOptions_OptionTargetType = exports.FieldOptions_OptionTargetType || (exports.FieldOptions_OptionTargetType = {}));
 /**
  * Is this method side-effect-free (or safe in HTTP parlance), or idempotent,
  * or neither? HTTP based RPC implementation may choose GET verb for safe
@@ -333,7 +333,7 @@ var MethodOptions_IdempotencyLevel;
      * @generated from protobuf enum value: IDEMPOTENT = 2;
      */
     MethodOptions_IdempotencyLevel[MethodOptions_IdempotencyLevel["IDEMPOTENT"] = 2] = "IDEMPOTENT";
-})(MethodOptions_IdempotencyLevel || (exports.MethodOptions_IdempotencyLevel = MethodOptions_IdempotencyLevel = {}));
+})(MethodOptions_IdempotencyLevel = exports.MethodOptions_IdempotencyLevel || (exports.MethodOptions_IdempotencyLevel = {}));
 /**
  * Represents the identified object's effect on the element in the original
  * .proto file.
@@ -360,7 +360,7 @@ var GeneratedCodeInfo_Annotation_Semantic;
      * @generated from protobuf enum value: ALIAS = 2;
      */
     GeneratedCodeInfo_Annotation_Semantic[GeneratedCodeInfo_Annotation_Semantic["ALIAS"] = 2] = "ALIAS";
-})(GeneratedCodeInfo_Annotation_Semantic || (exports.GeneratedCodeInfo_Annotation_Semantic = GeneratedCodeInfo_Annotation_Semantic = {}));
+})(GeneratedCodeInfo_Annotation_Semantic = exports.GeneratedCodeInfo_Annotation_Semantic || (exports.GeneratedCodeInfo_Annotation_Semantic = {}));
 // @generated message type with reflection information, may provide speed optimized methods
 class FileDescriptorSet$Type extends runtime_5.MessageType {
     constructor() {

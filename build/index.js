@@ -8,8 +8,9 @@ Object.defineProperty(exports, "isIMessage", { enumerable: true, get: function (
 Object.defineProperty(exports, "isIMessageType", { enumerable: true, get: function () { return type_guards_1.isIMessageType; } });
 var net_1 = require("./net");
 Object.defineProperty(exports, "ServiceDiscovery", { enumerable: true, get: function () { return net_1.ServiceDiscovery; } });
-Object.defineProperty(exports, "ApiClientBase", { enumerable: true, get: function () { return net_1.ApiClientBase; } });
-Object.defineProperty(exports, "ApiClientNoise", { enumerable: true, get: function () { return net_1.ApiClientNoise; } });
-Object.defineProperty(exports, "ApiClientPlain", { enumerable: true, get: function () { return net_1.ApiClientPlain; } });
-Object.defineProperty(exports, "createApiClient", { enumerable: true, get: function () { return net_1.createApiClient; } });
+var client_1 = require("./client");
+Object.defineProperty(exports, "ApiClientBase", { enumerable: true, get: function () { return client_1.ApiClientBase; } });
+Object.defineProperty(exports, "ApiClientNoise", { enumerable: true, get: function () { return client_1.ApiClientNoise; } });
+Object.defineProperty(exports, "ApiClientPlain", { enumerable: true, get: function () { return client_1.ApiClientPlain; } });
+Object.defineProperty(exports, "createApiClient", { enumerable: true, get: function () { return client_1.createApiClient; } });
 //# sourceMappingURL=index.js.map

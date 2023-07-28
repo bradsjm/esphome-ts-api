@@ -1,11 +1,12 @@
-import { TcpConnection, NetConnectionOpts } from "./tcp-connection";
+import { NetConnectionOpts, TcpConnection } from "../net/tcp-connection";
 import * as api from "../protos/api_pb";
 import {
     BinaryReadOptions,
     BinaryWriteOptions,
     FieldInfo,
     IMessageType,
-    JsonValue, MESSAGE_TYPE
+    JsonValue,
+    MESSAGE_TYPE
 } from "@protobuf-ts/runtime";
 
 /**

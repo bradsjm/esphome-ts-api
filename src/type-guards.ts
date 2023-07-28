@@ -1,5 +1,5 @@
 import { IMessageType } from "@protobuf-ts/runtime";
-import { IEntityKey, IMessage, IResponseEntity } from "./net";
+import { IEntityKey, IMessage, IResponseEntity } from "./client";
 
 /**
  * Type guard for IMessageType<T>
